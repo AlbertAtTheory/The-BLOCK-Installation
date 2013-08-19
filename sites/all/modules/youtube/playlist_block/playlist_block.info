@@ -1,0 +1,9 @@
+name = YouTube: Playlist Block
+description = Makes any YouTube playlist available as a system Block.
+package = YouTube
+core = 7.x
+
+dependencies[] = block
+dependencies[] = youtube
+
+files[] = youtube_playlist_block.tpl.php

@@ -1,0 +1,203 @@
+<?php
+
+/**
+ * @file
+ * Password Quick Set enables site administrators to quickly set new randomly
+ * generated passwords for users and also notify the users about it.
+ *
+ * Author(s):
+ *   Jakob Persson <http://drupal.org/user/37564>
+ *   Tobias Sjösten <http://drupal.org/user/213383>
+ *   BJ Wilson <http://drupal.org/user/365162>
+ *
+ * Considerable contributions by:
+ *   Daniel Wehner <http://drupal.org/user/99340>
+ *
+ * Sponsor(s):
+ *   NodeOne <http://nodeone.se>
+ *   SF Bio <http://www.sf.se>
+ */
+
+/**
+  * Defines default constants for the email subject and body
+  */
+define ('PASSQUICKSET_GENERATED_SUBJECT', "New password at [site:name]");
+define ('PASSQUICKSET_GENERATED_BODY', "Hello [user:name],\r\n\r\nYour password at [site:name] ([site:url]) has changed. Next time you log in, use your new password:[password:password]\r\n\r\nYou can log in here: [user:edit-url]\r\n\r\nBest Regards,\r\n\r\nThe staff at [site:name]");
+define ('PASSQUICKSET_GENERATED_BODY_NOPASS', "Hello [user:name],\r\n\r\nYour password at [site:name] ([site:url]) has changed. You can use this one time user log in url:[user:one-time-login-url] to log in an edit your password\r\n\r\nOr contact the site administrator here [site:mail]\r\n\r\nBest Regards,\r\n\r\nThe staff at [site:name]");
+
+/**
+  * Implements hook_token_info().
+  * Provide information about available placeholder tokens and token types.
+  */
+function passquickset_token_info() {
+  $type = array(
+  'name' => t('Password'),
+  'description' => t('Token for the generated password.'),
+  'needs-data' => 'password',
+  );
+  $password['pass'] = array(
+  'name' => t("Password"),
+  'description' => t("The generated password"),
+  );
+  return array(
+  'types' => array('password' => $type),
+  'tokens' => array('password' => $password),
+  );
+}
+
+/**
+  * Implements hook_token().
+  * Provide replacement values for placeholder tokens.
+  */
+function passquickset_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $url_options = array('absolute' => TRUE);
+
+  if (isset($options['language'])) {
+    $url_options['language'] = $options['language'];
+    $language_code = $options['language']->language;
+  }
+  else {
+    $language_code = NULL;
+  }
+
+  $sanitize = !empty($options['sanitize']);
+  $replacements = array();
+
+  if ($type == 'password' && !empty($data['password'])) {
+  $password = $data['password'];
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+      // Simple key values on the node.
+      case 'password':
+      $replacements[$original] = $password;
+      break;
+      }
+    }
+  }
+  return $replacements;
+}
+
+/**
+  * Implements hook_permission().
+  * The 'generate password' permission is useless without also having the
+  * 'administer users'.
+  */
+function passquickset_permission() {
+  return array(
+    'generate password' => array(
+      'title' => t('Generate password'),
+      'description' => t('generate a password'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_[user_profile_form]_alter().
+ */
+function passquickset_form_user_profile_form_alter(&$form, &$form_state) {
+  if (!user_access('generate password') || !isset($form['account'])) {
+  return;
+  }
+  foreach ($form['account'] as $name => $element) {
+    if ($name == 'pass') {
+      $new_account['genpass'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Generate new password'),
+        '#collapsible' => FALSE,
+        '#collapsed' => FALSE,
+        '#description' => '<p>' . t('Click the button below to generate a new random password for this user and have it emailed to them') . '</p>',
+      );
+      $new_account['genpass']['pass_type'] = array(
+        '#type' => 'radios',
+        '#title' => t('Type of notification'),
+        '#options' => array(t('Send a password in the email'), t('Send a one time notification in the email')),
+      );
+      $new_account['genpass']['genpass'] = array(
+       '#type' => 'submit',
+       '#value' => t('Generate new password'),
+       '#submit' => array('passquickset_genpass_submit'),
+      );
+    }
+    $new_account[$name] = $element;
+  }
+  $form['account'] = $new_account;
+}
+
+/**
+ * Implements hook_form_user_admin_settings_alter().
+ */
+function passquickset_form_user_admin_settings_alter(&$form, &$form_state) {
+  $form['email']['password_generated'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Password Quick Set email'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,                                                                                         
+    '#description' => t("This email is sent when you click the 'Generate new password' button in the user edit form. Available variables are: [user:name], [password:password], [site:name], [site:login-url], [site:url], [site:url-brief], [user:mail], and [user:edit-url]."),
+  );
+  $form['email']['password_generated']['passquickset_password_generated_subject'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Subject'),
+    '#default_value' => variable_get('passquickset_password_generated_subject', PASSQUICKSET_GENERATED_SUBJECT),
+    '#maxlength' => 180,
+  );
+  $form['email']['password_generated']['passquickset_password_generated_body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Body'),
+    '#default_value' => variable_get('passquickset_password_generated_body', PASSQUICKSET_GENERATED_BODY),
+    '#rows' => 3,
+  );
+}
+
+/**
+ * Generates a new password, save the account and send an email.
+ */
+function passquickset_genpass_submit($form, &$form_state) {
+  $uid = $form['#user']->uid;
+  $user = user_load($uid, $reset = FALSE);
+
+  $passtype = $form_state['values']['pass_type'];
+  $password = user_password();
+
+  if (!user_save($user, array('pass' => $password))) {
+    drupal_set_message(t('Password could not be updated!'), 'error');
+    return;
+  }
+
+  drupal_set_message(t("Password set to '@password'.", array('@password' => $password)));
+
+  drupal_mail(
+    'passquickset',
+    'passgen',
+     $user->mail,
+     user_preferred_language($user),
+     array('user' => $user, 'password' => $password, 'passtype' => $passtype),
+     variable_get('site_mail', NULL),
+     TRUE
+  );
+  return;
+}
+
+/**
+ * Implements hook_mail().
+ * Mails the user with default or customized password replacement text
+ */
+function passquickset_mail($key, &$message, $params) {
+  $user = $params['user'];
+  $pass = $params['password'];
+  $data = array('user' => $user, 'password' => $pass);
+  $passtype = $params['passtype'];
+  switch ($key) {
+    case 'passgen':
+    $subject = variable_get('passquickset_password_generated_subject', PASSQUICKSET_GENERATED_SUBJECT);
+    if ($passtype == 0) {
+      $body = variable_get('passquickset_password_generated_body', PASSQUICKSET_GENERATED_BODY);
+    }
+    else {
+      $body = variable_get('passquickset_password_generated_body', PASSQUICKSET_GENERATED_BODY_NOPASS);
+    }
+    $message['to'] = $user->mail;
+    $message['subject'] = token_replace($subject);
+    $message['body'][] = token_replace($body , $data , array('callback' => 'user_mail_tokens', 'sanitize' => FALSE));
+    break;
+  }
+}

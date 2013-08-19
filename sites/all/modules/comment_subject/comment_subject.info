@@ -1,0 +1,16 @@
+name = Comment subjects
+description = Provides a default comment subject like: "Re: [parent comment/node title]", auto-incremental numbering, and optional integration with token for author, date, etc.
+core = 7.x
+
+dependencies[] = comment
+
+files[] = comment_subject.module
+files[] = comment_subject.install
+files[] = comment_subject.tokens.inc
+
+; Information added by drupal.org packaging script on 2011-11-10
+version = "7.x-2.0-alpha2"
+core = "7.x"
+project = "comment_subject"
+datestamp = "1320956734"
+

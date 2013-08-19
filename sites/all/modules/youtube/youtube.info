@@ -1,0 +1,6 @@
+name = YouTube API
+package = YouTube
+description = Exposes YouTube API to Drupal.
+core = 7.x
+files[] = youtube.admin.inc
+configure = admin/config/media/youtube

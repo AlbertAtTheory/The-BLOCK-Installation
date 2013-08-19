@@ -1,0 +1,12 @@
+name = Suggested Terms
+description = "Replaces the default 'description' text on free-tagging textfields on node edit pages with a list of taxonomy terms in that vocabulary, with appropriate labeling"
+core = 7.x
+package = Taxonomy
+configure = admin/config/content/suggestedterms
+dependencies[] = taxonomy
+; Information added by drupal.org packaging script on 2013-02-10
+version = "7.x-1.0-unstable1+7-dev"
+core = "7.x"
+project = "suggestedterms"
+datestamp = "1360462848"
+

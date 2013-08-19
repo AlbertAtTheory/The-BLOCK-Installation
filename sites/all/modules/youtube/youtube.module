@@ -1,0 +1,95 @@
+<?php
+
+/**
+ * @file
+ * YouTube API fetching and decoding of various functions.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function youtube_menu() {
+  $items['admin/config/media/youtube'] = array(
+    'title' => 'YouTube API',
+    'description' => 'Configure YouTube API settings.',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file path' => drupal_get_path('module', 'system'),
+    'file' => 'system.admin.inc',
+  );
+  
+  $items['admin/config/media/youtube/api'] = array(
+    'title' => 'Developer API key',
+    'description' => 'Set your API key here to avoid "too many calls" errors.',
+    'page callback' => 'youtube_api_developer_key_page',
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file path' => drupal_get_path('module', 'youtube'),
+    'file' => 'youtube.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements youtube_get_data().
+ *
+ * Currently only playlist types are supported.
+ */
+function youtube_api_fetch($type, $arguments) {
+  $type = check_plain($type);
+  $arguments = check_plain($arguments);
+
+  $url = '/web/theblock/semaplaylist.txt';
+
+  $return = file_get_contents($url);
+
+  // @todo Better error handling.
+  if ($return->status_message == 'Forbidden') {
+    drupal_set_message(t('YouTube API returned an error.'), 'error');
+    return;
+  }
+
+  $return = drupal_json_decode($return);
+
+  return $return['data'];
+}
+
+/**
+ * Implements youtube_api_fetch_playlist().
+ *
+ * Fetches all videos associated with a playlist ID.
+ *
+ * @return array 
+ * Array contains author and title of playlist and all videos.
+ */
+function youtube_fetch_playlist($playlist) {
+  $playlist = check_plain($playlist);
+
+  $playlist_data = youtube_api_fetch('playlist', $playlist);
+
+  if (!$playlist_data['title']) {
+    drupal_set_message(t('Could not fetch the specified YouTube playlist.'), 'error');
+    return;
+  }
+
+  $return['title'] = $playlist_data['title'];
+  $return['author'] = $playlist_data['author'];
+  $return['description'] = $playlist_data['description'];
+
+  foreach ($playlist_data['items'] as $video) {
+    $position = $video['position'];
+    $return['videos'][$position]['id'] = $video['video']['id'];
+    $return['videos'][$position]['title'] = $video['video']['title'];
+    $return['videos'][$position]['description'] = $video['video']['description'];
+    $return['videos'][$position]['thumbnail'] = $video['video']['thumbnail']['hqDefault'];
+    $return['videos'][$position]['length'] = $video['video']['duration'];
+    $return['videos'][$position]['likes'] = $video['video']['likeCount'];
+    $return['videos'][$position]['uploaded'] = strtotime($video['video']['uploaded']);
+  }
+  
+  $return['raw'] = $playlist_data;
+
+  return $return;
+}

@@ -1,0 +1,17 @@
+name = Password Quick Set
+description = Quickly set a new password for a user and send a notification about the change.
+core = 7.x
+; Information added by drupal.org packaging script on 2011-07-01
+version = "7.x-1.0-beta1"
+core = "7.x"
+project = "passquickset"
+files[] = passquickset.module
+datestamp = "1309525621"
+
+
+; Information added by drupal.org packaging script on 2011-07-15
+version = "7.x-1.0-beta1"
+core = "7.x"
+project = "passquickset"
+datestamp = "1310716970"
+

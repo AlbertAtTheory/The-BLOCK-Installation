@@ -1,0 +1,10 @@
+; $Id: phonetic.info,v 1.1 2009/01/26 23:01:17 deegree Exp $
+name = Phonetic Wordfilter
+description = Filter profanity words and similiar sounding synomyms out of user generated content.
+core = 6.x
+; Information added by drupal.org packaging script on January 1, 1970 - 00:00
+version = "7.x-2.0-alpha2"
+core = "7.x"
+project = "phonetic"
+datestamp = "1297275162"
+

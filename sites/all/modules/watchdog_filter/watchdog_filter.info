@@ -1,0 +1,5 @@
+name = Watchdog Filter
+description = Removes McAfee scanning from watchdog
+package = Theory
+core = 7.x
+version = 1.0

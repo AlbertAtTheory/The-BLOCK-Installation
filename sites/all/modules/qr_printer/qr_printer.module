@@ -1,0 +1,183 @@
+<?php
+function qr_printer_permission() {
+	return array(
+		'access printout' => array(
+			'title' => t('Access QR Printout'),
+			'description' => t('Allow users to print out QR Codes'),
+		),
+		'access download' => array(
+			'title' => t('Access QR Download'),
+			'description' => t('Allow users to download QR Codes'),
+		),
+	);
+}
+
+function qr_printer_menu() {
+	$items['qr/print/%'] = array(
+		'page arguments' => array(2, 3),
+		'page callback' => 'qr_printer_avery',
+		'access arguments' => array('access printout'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['qr/download/%'] = array(
+		'page arguments' => array(2, 3, 4),
+		'page callback' => 'qr_download',
+		'access arguments' => array('access download'),
+		'type' => MENU_CALLBACK,
+	);
+
+	return $items;
+}
+
+function qr_printer_avery($type, $contentid) {
+	global $user;
+	$logo_image = '/web/theblock/sites/all/themes/theblock/logo.png';
+	$temporarypath = file_directory_temp() . '/' . $type . time() . '.png';
+	
+	if ($path = libraries_get_path('fpdf')) {
+		require($path . '/fpdf.php');
+		
+		class PDF extends FPDF {
+			function Header() {
+				global $user;
+				$this->SetFont('Arial','B',6);
+				$this->Cell(205.9,4,$user->name.'\'s QR Codes - Powered by Chevrolet Performance',1,0,'C');
+			}
+			function Footer() {
+				$this->SetY(-10);
+				$this->SetFont('Arial','B',6);
+				$this->Cell(205.9,4,'Optimized for Avery Label #22806',1,0,'C');
+			}
+		}
+	} else {
+		return;
+	}
+	if ($path = libraries_get_path('phpqrcode')) {
+		require($path . '/qrlib.php');
+	}
+
+	$qr_path = "";
+	
+	if ($type == 'user') {
+		$qr_path = 'http://theblock.com/' . drupal_get_path_alias('user/' . $user->uid) . '?qr';
+	} elseif ($type == 'node' && $node_data = node_load($contentid)) {
+		$qr_path = 'http://theblock.com/' . drupal_get_path_alias('node/' . $contentid) . '?qr';
+	}
+
+	QRcode::png($qr_path, $temporarypath, 'L', 5, 1);
+	$qr_image = $temporarypath;
+	
+	$pdf = new PDF('P','mm','Letter');
+	$pdf->SetMargins(5,10,5);
+	$pdf->AliasNbPages();
+	$pdf->AddPage();
+	
+	if ($type == 'user') {
+		$pdf->SetFont('Arial','I',6);
+		$pdf->Ln(64);
+		$pdf->Cell(205.9,4,'These QR codes link to your profile page ('.$qr_path.')',0,0,'C');
+		$pdf->Ln(66);
+		$pdf->Cell(205.9,4,'These QR codes link to your profile page ('.$qr_path.')',0,0,'C');
+		$pdf->Ln(66);
+		$pdf->Cell(205.9,4,'These QR codes link to your profile page ('.$qr_path.')',0,0,'C');
+	} elseif ($type == 'node') {
+		$pdf->SetFont('Arial','I',6);
+		$pdf->Ln(64);
+		$pdf->Cell(205.9,4,'These QR codes link to '.$node_data->title.' ('.$qr_path.')',0,0,'C');
+		$pdf->Ln(66);
+		$pdf->Cell(205.9,4,'These QR codes link to '.$node_data->title.' ('.$qr_path.')',0,0,'C');
+		$pdf->Ln(66);
+		$pdf->Cell(205.9,4,'These QR codes link to '.$node_data->title.' ('.$qr_path.')',0,0,'C');
+	}
+	
+	$pdf->Image($qr_image,22,19,39,0,'PNG');
+	$pdf->Image($qr_image,88,19,39,0,'PNG');
+	$pdf->Image($qr_image,155,19,39,0,'PNG');
+	$pdf->Image($logo_image,24,58,35);
+	$pdf->Image($logo_image,90,58,35);
+	$pdf->Image($logo_image,157,58,35);
+	
+	$pdf->Image($qr_image,22,85,39,0,'PNG');
+	$pdf->Image($qr_image,88,85,39,0,'PNG');
+	$pdf->Image($qr_image,155,85,39,0,'PNG');
+	$pdf->Image($logo_image,24,124,35);
+	$pdf->Image($logo_image,90,124,35);
+	$pdf->Image($logo_image,157,124,35);
+	
+	$pdf->Image($qr_image,22,150,39,0,'PNG');
+	$pdf->Image($qr_image,88,150,39,0,'PNG');
+	$pdf->Image($qr_image,155,150,39,0,'PNG');
+	$pdf->Image($logo_image,24,189,35);
+	$pdf->Image($logo_image,90,189,35);
+	$pdf->Image($logo_image,157,189,35);
+	
+	$pdf->Image($qr_image,22,216,39,0,'PNG');
+	$pdf->Image($qr_image,88,216,39,0,'PNG');
+	$pdf->Image($qr_image,155,216,39,0,'PNG');
+	$pdf->Image($logo_image,24,255,35);
+	$pdf->Image($logo_image,90,255,35);
+	$pdf->Image($logo_image,157,255,35);
+
+	$pdf->Output();
+	
+	return;
+}
+
+function qr_download($type, $contentid, $tracking) {
+	global $user;
+	$logo_image = '/web/theblock/sites/all/themes/theblock/logo-print.png';
+	$temporarypath = file_directory_temp() . '/' . $type . time() . '.png';
+
+	if ($path = libraries_get_path('fpdf')) {
+		require($path . '/fpdf.php');
+		
+		class PDF extends FPDF {
+			function Header() {
+				global $user;
+				$this->SetFont('Arial','B',11);
+				$this->Cell(195,10,$user->name.'\'s QR Code - Powered by Chevrolet Performance',1,0,'C');
+			}
+			function AcceptPageBreak() {
+				return false;
+			}
+		}
+	} else {
+		return;
+	}
+	if ($path = libraries_get_path('phpqrcode')) {
+		require($path . '/qrlib.php');
+	}
+	
+	if ($type == 'user') {
+		$qr_path = 'http://theblock.com/' . drupal_get_path_alias('user/' . $user->uid) . '?qr';
+	} elseif ($type == 'node') {
+		$qr_path = 'http://theblock.com/' . drupal_get_path_alias('node/' . $contentid) . '?qr';
+	}
+	
+	if ($tracking) {
+  	$qr_path .= '&trk=' . $tracking;
+	}
+
+	QRcode::png($qr_path, $temporarypath, 'L', 5, 1);
+	$qr_image = $temporarypath;
+	
+	$pdf = new PDF('P','mm','Letter');
+	$pdf->AliasNbPages();
+	$pdf->AddPage();
+	
+	$pdf->Image($qr_image,55,60,100,0,'PNG');
+	$pdf->Image($logo_image,58,160,93);
+	
+	$pdf->Ln(250);
+	$pdf->SetFont('Arial','B',11);
+	if ($type == 'user') {
+		$pdf->Cell(195,10,'This QR code links to your profile page',1,0,'C');
+	} elseif ($type == 'node' && $node_data = node_load($contentid)) {
+		$pdf->Cell(195,10,'This QR code links to '.$node_data->title,1,0,'C');
+	}
+	
+	$pdf->Output();
+	
+	return;
+}

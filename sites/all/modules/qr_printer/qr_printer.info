@@ -1,0 +1,7 @@
+name = QR Printer
+description = Provides QR printout functionality
+package = Theory
+core = 7.x
+version = 1.0b
+
+dependencies[] = libraries

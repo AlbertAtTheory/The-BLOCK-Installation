@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+ */
+function comment_subject_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name LIKE 'comment_subject_field:default_subject_pattern_%'");
+  db_query("DELETE FROM {variable} WHERE name LIKE 'comment_subject_field:strip_parent_title_%'");
+}
+
+/**
+ * when comming from:
+ * - 6.x-1.x: 6.x-2.0-alphaX updates are not needed at all
+ * - 6.x-2.0-alphaX prior to 6.x-2.0-alpha5: updates are no longer available (upgrade to 6.x-2.0-alpha5 first)
+ * - 6.x-2.0-beta1: token migration will be performed
+ * - 7.x-1.x: updates are not needed at all
+ */
+/*
+function comment_subject_update_7000() {
+  $ret = array();
+  // detailed history of variables used by previous verions is commented in comment_subject_update_6002 at comment_subject-6.x-2.0-beta1
+  $count = db_result(db_query("SELECT COUNT(*) FROM {variable} WHERE name LIKE 'comment_subject_field:default_%' AND NOT LIKE 'comment_subject_field:default_subject_%'"));
+  if ($count > 0) {
+    // if we are comming from a 6.x-2.0-alphaX prior to 6.x-2.0-alpha5: updates are no longer available
+    $ret['#abort'] = array('success' => FALSE, 'query' => t('Unable to upgrade from a minor 6.x-2.0-alphaX version. You must first !download_latest and upgrade to it before upgrading to versions above it.', array('!download_latest' => l(t('download latest 6.x-2.0-alphaX version'), 'http://ftp.drupal.org/files/projects/comment_subject-6.x-2.0-alpha5.tar.gz'))));
+  }
+  // @TODO: retrieve schema_version to know where are we comming from
+  // and migrate the tokens to their respective D7 version
+  return $ret;
+}
+*/

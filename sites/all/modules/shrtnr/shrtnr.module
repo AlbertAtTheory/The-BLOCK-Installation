@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * @file
+ * shrtnr module implementation.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function shrtnr_permission() {
+  $permissions['generate shortened url'] = array(
+    'title' => t('Generate shortened URLs'),
+  );
+  return $permissions;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Alters the Redirect Edit form by adding a checkbox to generate a shortened
+ * URL automatically.
+ */
+function shrtnr_form_redirect_edit_form_alter(&$form, &$form_state, $form_id) {
+  // Check user permissions to generate a shortened URL.
+  if (user_access('generate shortened url')) {
+    // Add a checkbox to automatically shorten the URL.
+    $form['shrtnr'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Automatically generate shortened URL."),
+      '#weight' => -10,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="source"]' => array('value' => ''),
+        ),
+      ),
+    );
+    // Unset the "required" value and make it dependent on the shortener checkbox.
+    $form['source']['#required'] = FALSE;
+    $form['source']['#states'] = array(
+      'required' => array(
+        ':input[name="shrtnr"]' => array('checked' => FALSE),
+      ),
+      'visible' => array(
+        ':input[name="shrtnr"]' => array('checked' => FALSE),
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_redirect_presave().
+ *
+ * Generates the shortened URL if required.
+ */
+function shrtnr_redirect_presave($redirect) {
+  // If the user has selected to automatically generate a shortened URL.
+  if (isset($redirect->shrtnr)) {
+    // Random 5 character shortener, check that it doesn't already exist.
+    do {
+      $shrtnr = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 5);
+    } while (redirect_load_by_source($shrtnr, $redirect->language));
+    // Once we know the shortener is unique, make it the source.
+    $redirect->source = $shrtnr;
+  }
+}

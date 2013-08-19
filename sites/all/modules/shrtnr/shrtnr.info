@@ -1,0 +1,5 @@
+name = shrtnr
+description = Allows users to generate URL shorteners to any Drupal URL.
+core = 7.x
+
+dependencies[] = redirect

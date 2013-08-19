@@ -1,0 +1,6 @@
+name = Seven Day Report
+description = A seven day report in PDF form.
+package = Theory
+core = 7.x
+
+dependencies[] = libraries

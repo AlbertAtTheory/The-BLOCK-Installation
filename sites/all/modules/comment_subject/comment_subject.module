@@ -1,0 +1,329 @@
+<?php
+
+define('COMMENT_SUBJECT__DEFAULT_SUBJECT_PATTERN', 'Re: [comment:parent-title]');
+
+/**
+ * Implements hook_theme().
+ */
+function comment_subject_theme(&$cache, $type, $module_name, $module_path) {
+  $theme = array();
+  // if issue #576592 gets into token module this will be no longer needed
+  $theme['comment_subject_token_list'] = array(
+    'variables' => array('token_list' => array(), 'prefix' => '[', 'suffix' => ']', 'headers' => array(t('Token'), t('Name'), t('Description'))),
+  );
+  $theme['comment_subject_token_chained_list'] = array(
+    'variables' => array('token_list' => array(), 'prefix' => '*:', 'suffix' => '', 'headers' => array(t('Token chains'), t('Name'), t('Description'))),
+  );
+  return $theme;
+}
+
+/**
+ * Implements hook_help().
+ */
+function comment_subject_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#comment_subject':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Provides a default comment subject like: "Re: [parent comment/node title]", auto-incremental numbering, and optional integration with token for author, date, etc. This option can be set on a per content type basis.') . '</p>';
+      $output .= '<p>' . t('Users can still edit the comment subject to their liking if comment titles are enabled in the comment settings.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      // don't translate isolated token names
+      $output .= '<dt>' . '[comment:parent-title]' . '</dt>';
+      $output .= '<dd>' . t('When using [comment:parent-title] comment\'s subject is derived from the node title, or the comment that the new comment is a reply to. In addition enabling "strip prefix/suffix from parent\'s title" allows (for instance) avoiding repeated "Re:" prefix and/or "by username" suffix.') . '</dd>';
+      $output .= '<dd>' . t('Note that stripping prefix/suffix fully suppports [comment:*] replacements, while global replacements (e.g. [site:*]) won\'t let the stripping algorithm behave as expected. Nevertheless, some immutable tokens might be used (for instance [site:name], [site:mail]), but if their values change in time the prefix/suffix stripping shall fail.') . '</dd>';
+      // don't translate isolated token names
+      $output .= '<dt>' . '[comment:numbering]' . '</dt>';
+      $output .= '<dd>' . t('When using [comment:numbering] option comment\'s subject are auto-incremental (e.g. "#1", "#2", an so on).')
+        . '<br/>' . t('CAUTION: to achieve [comment:numbering] replacement works as expected previous existing comments shouldn\'t be deleted. Otherwise numbering sequence won\'t be guaranted (i.e. existing comments won\'t get updated and new comments will count just existing ones).') . '</dd>';
+      $output .= '</dl>';
+      $output .= '<h3>' . t('Special treatment') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('WHEN the comment has NOT a parent') . '</dt>';
+      $output .= '<dd>' . t('[comment:pid] evaluates to zero.') . ' '. t('ONLY when generating the subject.')
+        . '<br/>' . t('(other uses of this token still evaluate to empty string according to core\'s behavior)') . '</dd>';
+      $output .= '<dd>' . t('[comment:parent:numbering] evaluates to zero.')
+        . '<br/>' . t('(even if used in other context, since it is owned by this module)') . '</dd>';
+      $output .= '<dd>' . t('[comment:parent:numbering] doesn\'t requires subject to be disabled.')
+        . '<br/>' . t('(even when [comment:parent:*] appears marked with "**")') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_node_type_delete().
+ */
+function comment_subject_node_type_delete($info) {
+  $node_type = $info->type;
+  variable_del('comment_subject_field:default_subject_pattern_' . $node_type);
+  variable_del('comment_subject_field:strip_parent_title_' . $node_type);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function comment_subject_form_node_type_form_alter(&$form, $form_state) {
+  // keep this condition consistent with comment.module
+  if (isset($form['type'])) {
+    // sink all subject related settings to the bottom    
+    $form['comment']['comment_subject_field']['#weight'] = 15;
+    $node_type = $form['#node_type']->type;
+
+    $form['comment']['comment_subject_field:default_subject_pattern'] = array(
+      '#title' => 'Default title pattern',
+      '#description' => t('Default value for comment\'s title.') . '<br/>' . t('e.g. "Re: [comment:parent-title]", "#[comment:numbering]".'),
+      '#type' => 'textfield',
+      '#default_value' => variable_get('comment_subject_field:default_subject_pattern_' . $node_type, COMMENT_SUBJECT__DEFAULT_SUBJECT_PATTERN),
+      '#weight' => 12,
+      '#maxlength' => NULL, // avoid maxlength=128
+    );
+    
+    $form['comment']['comment_subject_field:strip_parent_title'] = array(
+      '#title' => 'Strip prefix/suffix from parent\'s title',
+      '#description' => t('Avoids repetitive prefix/suffix when using the parent\'s title in the above pattern (recommended).'),
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('comment_subject_field:strip_parent_title_' . $node_type, TRUE), 
+      '#weight' => 13,
+    );
+
+    $form['comment']['token_replacements'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Replacements for default subject pattern'),
+      //'#collapsible' => TRUE,
+      //'#collapsed' => TRUE,
+      '#weight' => 20,
+    );
+
+    $mark = '<b>**</b>';
+    $chained_list = array();
+    $token_list = comment_subject_get_token_list(array('comment', 'site'), $chained_list);
+    foreach($token_list['comment'] as $key => $value) {
+      if (comment_subject_requires_comment_subject_field_disabled('comment:' . $key)) {
+        $token_list['comment'][$key]['description'] .= $mark;
+      }
+    }
+    $form['#validate'][] = 'comment_subject_validate_replacement';
+    $form['comment']['token_replacements']['#description'] = 
+      //t('Note that not every available pattern makes sense for comment\'s default subject.') . 
+      //'<br/>' . 
+      t('Replacements marked with "!mark" will only be available after submission, therefore require <em>comment title</em> to be disallowed.', array('!mark' => $mark));
+    
+    $form['comment']['token_replacements']['table'] = array(
+      // if issue #576592 gets into token module this would be theme('token_list', ...) instead
+      '#markup' => theme('comment_subject_token_list', array('token_list' => $token_list)) . theme('comment_subject_token_chained_list', array('token_list' => $chained_list)),
+    );
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function comment_subject_form_comment_form_alter(&$form, &$form_state) {
+  if (empty($form['subject']['#default_value'])) {
+    // if !$form['subject']['#access'] it means it is disabled and will be handled on hook_comment_[insert/update]
+    if (!$form['subject']['#access']) {
+      // nevertheless support comment preview
+      $form['subject']['#access'] = TRUE; // not required, but won't harm either
+      $form['subject']['#type'] = 'value'; // use 'hidden' when testing for quick inspect DOM
+      
+      $node_type = node_load($form['nid']['#value'])->type;
+      $pattern = variable_get('comment_subject_field:default_subject_pattern_' . $node_type, COMMENT_SUBJECT__DEFAULT_SUBJECT_PATTERN);
+      $unsupported = comment_subject_unsupported_on_preview($pattern);
+      if (!empty($unsupported)) {
+        // computing its candidate value not only is a waste of time/performance
+        // but can't be achieved without errors, since many missing properties
+        // will be used by every [comment:*] requiring subject to be disabled
+        $form['subject']['#default_value'] = t('(generated subject)');
+        return; // don't fall through
+      }
+      // fall through (the subject is disable, but there are no unsupported tokens for preview)
+    }
+    // keep this consistent with internal properties added in comment_form
+    foreach (array('cid', 'pid', 'nid', 'language', 'uid', 'node_type') as $key) {
+      $comment[$key] = $form[$key]['#value'];
+    }
+    $comment = (object)$comment;
+    
+    $form['subject']['#default_value'] = _comment_subject_get_subject($comment);
+  }
+}
+
+function comment_subject_requires_comment_subject_field_disabled($key) {
+  // consider both 'comment:node' and 'comment:node:*' separately (avoid matching 'comment:nodeXYZ')
+  if (strpos($key, 'comment:node:') === 0) return FALSE;
+  return (!in_array($key, array('comment:node', 'comment:parent-title', 'comment:nid', 'comment:pid', 'comment:uid', 'comment:parent:numbering')));
+}
+
+function _comment_subject_token_replace($str, $comment) {
+  // [comment:pid] evaluates to zero when there is no parent (legacy behavior)
+  // also avoid "Warning: array_flip(): Can only flip STRING and INTEGER values! in DrupalDefaultEntityController->load() (line 108 of .../includes/entity.inc)." 
+  if (empty($comment->pid)) $comment->pid = 0;
+  
+  $result = token_replace($str, array('comment' => $comment), array('sanitize' => FALSE));
+  return $result;
+}
+
+function _comment_subject_get_subject($comment) {
+  $node_type = node_load($comment->nid)->type;
+
+  $pattern = variable_get('comment_subject_field:default_subject_pattern_' . $node_type, COMMENT_SUBJECT__DEFAULT_SUBJECT_PATTERN);
+  $strip_parent_title = variable_get('comment_subject_field:strip_parent_title_' . $node_type, TRUE);
+  
+  if ($strip_parent_title && $comment->pid) {
+    // stripping algorithm
+    if (strpos($pattern, '[comment:parent-title]') !== FALSE) {
+      list($prefix, $suffix) = explode('[comment:parent-title]', $pattern);
+      
+      $parent_comment = comment_load($comment->pid);
+      $parent_prefix = _comment_subject_token_replace($prefix, $parent_comment);
+      $parent_suffix = _comment_subject_token_replace($suffix, $parent_comment);
+      
+      $parent_title = _comment_subject_token_replace('[comment:parent-title]', $comment);
+      if (!empty($parent_prefix) && strpos($parent_title, $parent_prefix) === 0) {
+        $parent_title = substr($parent_title, strlen($parent_prefix));
+      }
+      // strrpos only works for a single character in PHP4
+      if (!empty($parent_suffix) && strpos(strrev($parent_title), strrev($parent_suffix)) === 0) {
+        $parent_title = strrev(substr(strrev($parent_title), strlen($parent_suffix)));
+      }
+      
+      // $parent_title was already stripped of $parent_prefix and $parent_suffix
+      $pattern = str_replace('[comment:parent-title]', $parent_title, $pattern);
+    }
+  }
+  
+  $subject = _comment_subject_token_replace($pattern, $comment);
+  
+  // comment subjects can not be longer than 64 characters
+  $subject = truncate_utf8($subject, 64, TRUE, TRUE);
+  
+  return $subject;
+}
+
+/**
+ * Implements hook_comment_insert(). 
+ */
+function comment_subject_comment_insert($comment) {
+  _comment_subject_update($comment);
+}
+
+/**
+ * Implements hook_comment_update(). 
+ */
+function comment_subject_comment_update($comment) {
+  _comment_subject_update($comment);
+}
+
+function _comment_subject_update($comment) {
+  // admin can change the author or other info exposed by tokens
+  // therefore requires update (only if comment subject is disabled) 
+  // having subject enabled the existing text is considered user input
+  // (for those cases only #default_value is provided by form_alter)
+  $node_type = node_load($comment->nid)->type;
+  $cid = $comment->cid;
+  // if user subject is enabled can't figure out whether should be updated or leave user input as is
+  if (!variable_get('comment_subject_field_' . $node_type, 1)) {
+    // update required for every [comment:*] replacement requiring subject to be disabled
+    $comment = comment_load($cid);
+    $subject = _comment_subject_get_subject($comment);
+    db_update('comment')
+      ->fields(array('subject' => $subject))
+      ->condition('cid', $cid)
+      ->execute();
+  }
+}
+
+function comment_subject_validate_replacement($form, &$form_state) {
+  // if "comment subject field" is enabled
+  // check for tokens which only will be available after submission
+  $matches = array();
+  if ($form_state['values']['comment_subject_field']) {
+    $element_key = 'comment_subject_field:default_subject_pattern';
+    $unsupported = comment_subject_unsupported_on_preview($form_state['values'][$element_key]);
+    if (!empty($unsupported)) {
+      form_set_error($element_key, t('There are some token replacements in use which requires <em>comment subject field</em> to be disabled: @unsupported', array('@unsupported' => '[' . implode('], [', $unsupported) . ']')));
+    }
+  }
+}
+
+function comment_subject_unsupported_on_preview($default_subject_pattern) {
+  $unsupported = array();
+  if (preg_match_all('/\\[(comment:.*)\\]/U', $default_subject_pattern, $matches)) {
+    foreach($matches[1] as $replacement) {
+      if (comment_subject_requires_comment_subject_field_disabled($replacement)) {
+        $unsupported[] = $replacement;
+      } 
+    }
+  }
+  return $unsupported;
+}
+
+function comment_subject_get_token_list(array $types = array('site'), array &$chained_list = array()) {
+  $token_info = token_info();
+  $token_list = array();
+  $chains = array();
+  foreach ($token_info['tokens'] as $type => $tokens) {
+    if (in_array($type, $types)) {
+      $token_list[$type] = $tokens;
+      foreach ($tokens as $key => $data) {
+        if (!empty($data['type'])) {
+          $chains[$data['type']][] = $key; 
+        }
+      }
+    }
+  }
+  
+  // @TODO: refactor this whole function so chains can be discovered in deep
+  // right now only discovers the 1st chain level
+  // e.g. [comment:created:*] and its chains *:created:long, etc
+  // e.g. [comment:node:*] and its chains *:node:changed, etc
+  // but it doesn't go deep to find chain *:changed:long (e.g. [comment:node:changed:long]) 
+  
+  // now look for the chained types
+  $chained_types = array_keys($chains);
+  //$chained_list = array(); received by ref
+  foreach ($token_info['tokens'] as $type => $tokens) {
+    if (in_array($type, $chained_types)) {
+      foreach ($chains[$type] as $chain) {
+        $chained_list[$chain] = $tokens;
+      }
+      unset($chained_types[$type]);
+    }
+  }
+  return $token_list;
+}
+
+// if issue #576592 gets into token module this will require a rollback
+// to conditional declare theme_token_list (if !module_exists('token'))
+function theme_comment_subject_token_list(array $variables) {
+  $token_list = $variables['token_list'];
+  $prefix = $variables['prefix'];
+  $suffix = $variables['suffix'];
+  $headers = $variables['headers'];
+  
+  $rows = array();
+  $chains_text = '<b>' . t('chains:') . '</b> ';
+  foreach ($token_list as $type => $tokens) {
+    $rows[] = array(array('data' => drupal_ucfirst($type) .' '. t('tokens'), 'class' => 'region', 'colspan' => 3));
+    foreach ($tokens as $key => $data) {
+      $chains = '';
+      if (!empty($data['type'])) {
+        $key = '<b>' . $key . ':*</b>';
+        $chains = $chains_text;
+      }
+      $row = array();
+      $row[] = $prefix . $type . ':' . $key . $suffix;
+      $row[] = t($data['name']);
+      $row[] = $chains . t($data['description']);
+      $rows[] = $row;
+    }
+  }
+
+  $output = theme('table', array('header' => $headers, 'rows' => $rows, 'attributes' => array('class' => array('description'))));
+  return $output;
+}
+
+function theme_comment_subject_token_chained_list(array $variables) {
+  return theme_comment_subject_token_list($variables);
+}

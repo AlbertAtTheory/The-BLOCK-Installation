@@ -1,0 +1,8 @@
+name = "Touch icons"
+description = "Provides additional theme settings to display special Web Clip icons on iOS devices."
+core = 7.x
+package = "Theme settings"
+
+files[] = touch_icons.module
+files[] = touch_icons.admin.inc
+configure = admin/appearance/settings

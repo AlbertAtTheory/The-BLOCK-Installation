@@ -1,0 +1,15 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the Playlist Block module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * @ingroup playlist_block
+ */
+function playlist_block_uninstall() {
+  variable_del('block_youtube_playlist');
+  variable_del('block_youtube_playlist_date_format');
+}

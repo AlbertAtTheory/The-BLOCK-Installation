@@ -1,0 +1,272 @@
+<?php
+
+/**
+ * @file
+ *
+ * Adds a fieldset to theme settings form which allows site administrators to
+ * specify Apple Touch icons for Drupal websites. The Touch icon settings behave
+ * in a similar manner to the Site Logo and Favicon settings provided by Drupal
+ * core.
+ *
+ * Also provides a simple means for theme developers to provide default Touch
+ * icons with their theme.
+ *
+ * @todo implement hook_help() ?
+ * @todo hook_update() if needs be
+ *
+ * @todo IMPORTANT figure out new variable naming scheme!!!!
+ * 
+ * @todo refactor/deprecate _touch_icons_get_theme_settings_key
+ *   - http://drupal.org/node/1762532
+ */
+
+/**
+ * Touch icons configuration dictionary.
+ *
+ * @return array
+ */
+function _touch_icons_icon_configuration() {
+  return array(
+    'iPad' => array(
+      'p' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_startup_ipad_portrait',
+          'width' => 768,
+          'height' => 1004,
+          'default' => '/apple-touch-startup-image-768x1004.png',
+          'media' => '(device-width: 768px) and (orientation: portrait)',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_startup_ipad_portrait_retina',
+          'width' => 1536,
+          'height' => 2008,
+          'default' => '/apple-touch-startup-image-1536x2008.png',
+          'media' => '(device-width: 1536px) and (orientation: portrait) and (-webkit-device-pixel-ratio: 2)',
+        ),
+        'rel' => 'apple-touch-startup-image',
+        'media' => 'screen and (orientation: portrait)',
+        'title' => t('Portrait Startup Image'),
+        'description' => t('The startup image used when the site is launched from the iOS home screen and the device is in portrait mode'),
+      ),
+      'l' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_startup_ipad_landscape',
+          'width' => 1024,
+          'height' => 748,
+          'default' => '/apple-touch-startup-image-1024x748.png',
+          'media' => '(device-width: 768px) and (orientation: landscape)',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_startup_ipad_landscape_retina',
+          'width' => 2048,
+          'height' => 1496,
+          'default' => '/apple-touch-startup-image-2048x1496.png',
+          'media' => '(device-width: 1536px)  and (orientation: landscape) and (-webkit-device-pixel-ratio: 2)',
+        ),
+        'rel' => 'apple-touch-startup-image',
+        'media' => 'screen and (orientation: landscape)',
+        'title' => t('Landscape Startup Image'),
+        'description' => t('The startup image used when the site is launched from the iOS home screen and the device is in landscape mode.'),
+      ),
+      'i' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_ipad',
+          'width' => 72,
+          'height' => 72,
+          'default' => '/apple-touch-icon-144x144.png',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_ipad_retina',
+          'width' => 144,
+          'height' => 144,
+          'default' => '/apple-touch-icon-72x72.png',
+        ),
+        'rel' => 'apple-touch-icon',
+        'media' => 'screen',
+        'title' => t('Touch Icon'),
+        'description' => t('Most iOS devices can display this kind of icon. Rounded corners and a glass-effect overlay are applied by the iOS device.'),
+      ),
+      'ic' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_ipad_precomp',
+          'width' => 72,
+          'height' => 72,
+          'default' => '/apple-touch-icon-144x144-precomposed.png',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_ipad_precomp_retina',
+          'width' => 144,
+          'height' => 144,
+          'default' => '/apple-touch-icon-72x72-precomposed.png',
+        ),
+        'rel' => 'apple-touch-icon-precomposed',
+        'media' => 'screen',
+        'title' => t('Touch Icon (precomposed)'),
+        'description' => t('Using a &apos;precomposed&apos; touch icon allows more control over the icon&apos;s appearance. iOS devices do not apply any special effects to these icons. It is <em>highly recommended</em> that you also enable a plain version, as early iOS versions do not support precomposed icons.'),
+      ),
+    ),
+    'iOS' => array(
+      'p' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_startup',
+          'width' => 320,
+          'height' => 460,
+          'default' => '/apple-touch-startup-image-320x460.png',
+          'media' => '(device-width: 320px)',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_startup_retina',
+          'width' => 640,
+          'height' => 920,
+          'default' => '/apple-touch-startup-image-640x920.png',
+          'media' => '(device-width: 320px) and (-webkit-device-pixel-ratio: 2)',
+        ),
+        'rel' => 'apple-touch-startup-image',
+        'media' => 'screen',
+        'title' => t('Startup Image'),
+        'description' => t('The startup image used when the site is launched from the iOS home screen.'),
+      ),
+      'i' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_plain',
+          'width' => 57,
+          'height' => 57,
+          'default' => '/apple-touch-icon.png',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_retina',
+          'width' => 114,
+          'height' => 114,
+          'default' => '/apple-touch-icon-114x114.png',
+        ),
+        'rel' => 'apple-touch-icon',
+        'media' => 'screen',
+        'title' => t('Touch Icon'),
+        'description' => t('Most iOS devices can display this kind of icon. Rounded corners and a glass-effect overlay are applied by the iOS device.'),
+      ),
+      'ic' => array(
+        'normal' => array(
+          'id' => 'touch_icon_path_precomp',
+          'width' => 57,
+          'height' => 57,
+          'default' => '/apple-touch-icon-precomposed.png',
+        ),
+        'retina' => array(
+          'id' => 'touch_icon_path_precomp_retina',
+          'width' => 114,
+          'height' => 114,
+          'default' => '/apple-touch-icon-114x114-precomposed.png',
+        ),
+        'rel' => 'apple-touch-icon-precomposed',
+        'media' => 'screen',
+        'title' => t('Touch Icon (precomposed)'),
+        'description' => t('Using a &apos;precomposed&apos; touch icon allows more control over the icon&apos;s appearance. iOS devices do not apply any special effects to these icons. It is <em>highly recommended</em> that you also enable a plain version, as early iOS versions do not support precomposed icons.'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Touch icons configuration dictionary.
+ *
+ * @param string $platform
+ *  The icon platform as defined in dictionary.
+ * @param string $mode
+ *  The icon mode as defined in dictionary.
+ * @param string $resolution
+ *  The icon resolution, either 'normal' or 'retina' size.
+ *
+ * @return string
+ *  The full URL to the icon.
+ */
+function _touch_icons_get_icon_url($platform, $mode, $resolution) {
+  // If no key is given, use the current theme if we can determine it.
+  $theme = !empty($GLOBALS['theme_key']) ? $GLOBALS['theme_key'] : '';
+  if ($theme) {
+    $themes = list_themes();
+    $theme_object = $themes[$theme];
+  }
+  
+  // Grab the array of possible devices and modes.
+  $icon = _touch_icons_icon_configuration();
+
+  // Determine the URL for the icon version that should be used.
+  if (theme_get_setting('default_touch_icons_' . strtolower($platform))) {
+    // User settings are to show the default icon.
+    if (file_exists($icon_url = dirname($theme_object->filename) . $icon[$platform][$mode][$resolution]['default'])) {
+      // If the theme provides a default icon, use it here.
+      $icon_url = file_create_url($icon_url);
+    }
+    else {
+      // Otherwise, use the module-provided default icon.
+      $icon_url = file_create_url(drupal_get_path('module', 'touch_icons') . $icon[$platform][$mode][$resolution]['default']);
+    }
+  } else {
+    // User settings are to show a custom icon.
+    $icon_url = file_create_url(theme_get_setting($icon[$platform][$mode][$resolution]['id']));
+  }
+  
+  return $icon_url;
+}
+
+/**
+ * Implements hook_hook_info().
+ */
+function touch_icons_hook_info() {
+  $hooks['form_system_theme_settings_alter'] = array(
+    'group' => 'admin',
+  );
+
+  return $hooks;
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function touch_icons_preprocess_html(&$vars) {
+  // Grab the array of possible devices and modes.
+  $config = _touch_icons_icon_configuration();
+
+  // Now we loop through the configuration and build our Javascript.
+  foreach ($config as $platform => $settings) {
+    foreach ($settings as $mode => $icon) {
+      // If this is a Startup Image but it's turned off, don't continue.
+      if (($mode == 'p' || $mode == 'l') && !theme_get_setting('toggle_startup_image'))
+        continue;
+
+      // If this is a Touch Icon but it's turned off, don't continue.
+      if ($mode == 'i' && !theme_get_setting('toggle_touch_icon_plain'))
+        continue;
+
+      // If this is a precomposed Touch Icon but it's turned off, don't continue.
+      if ($mode == 'ic' && !theme_get_setting('toggle_touch_icon_precomp'))
+        continue;
+
+      if ($normal_icon_url = _touch_icons_get_icon_url($platform, $mode, 'normal')) {
+        // Add the apple-touch-icon meta tag to the header.
+        drupal_add_html_head(array('#tag' => 'link', '#attributes' => array(
+          'rel' => $icon['rel'],
+          'href' =>  $normal_icon_url,
+          'sizes' => $icon['normal']['width'] . 'x' . $icon['normal']['height'],
+          'media' => $icon['normal']['media'],
+        )), $icon['normal']['id']);
+        
+        // Unset the icon URL for next iteration.
+        unset($normal_icon_url);
+      }
+
+      if ($retina_icon_url = _touch_icons_get_icon_url($platform, $mode, 'retina')) {
+        // Add the apple-touch-icon meta tag to the header.
+        drupal_add_html_head(array('#tag' => 'link', '#attributes' => array(
+          'rel' => $icon['rel'],
+          'href' =>  $retina_icon_url,
+          'sizes' => $icon['retina']['width'] . 'x' . $icon['retina']['height'],
+          'media' => $icon['retina']['media'],
+        )), $icon['retina']['id']);
+        
+        // Unset the icon URL for next iteration.
+        unset($retina_icon_url);
+      }
+    }
+  }
+}

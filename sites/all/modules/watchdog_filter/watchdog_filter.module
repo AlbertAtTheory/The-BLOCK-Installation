@@ -1,0 +1,6 @@
+<?php
+  function watchdog_filter_watchdog(array $log_entry) {
+    Database::getConnection('default', 'default')->delete('watchdog')
+      ->condition('hostname', '161.69.30.167')
+      ->execute();
+  }
