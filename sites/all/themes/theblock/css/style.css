@@ -1,0 +1,84 @@
+/*
+Syntax error: File to import not found or unreadable: partials/base.
+              Load paths:
+                /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass
+                /Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/frameworks/blueprint/stylesheets
+                /Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/frameworks/compass/stylesheets
+                /Applications/compass.app/Contents/Resources/ruby/compass_extensions/compass-960-plugin-f4bfe8555a7d2cae09bc/stylesheets
+                /Applications/compass.app/Contents/Resources/ruby/compass_extensions/heygrady-compass-html5-boilerplate-4cc8815/stylesheets
+                /Applications/compass.app/Contents/Resources/ruby/compass_extensions/compass-h5bp/stylesheets
+                Compass::SpriteImporter
+        on line 2 of /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass/style.scss
+
+1: /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass/style.scss
+
+Backtrace:
+/Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass/style.scss:2
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/import_node.rb:64:in `import'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/import_node.rb:62:in `import'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/import_node.rb:25:in `imported_file'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:149:in `visit_import'
+org/jruby/RubyKernel.java:2080:in `send'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/base.rb:37:in `visit'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:18:in `visit'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/base.rb:53:in `visit_children'
+org/jruby/RubyArray.java:2331:in `collect'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/base.rb:53:in `visit_children'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:27:in `visit_children'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:39:in `with_environment'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:26:in `visit_children'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/base.rb:37:in `visit'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:47:in `visit_root'
+org/jruby/RubyKernel.java:2080:in `send'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/base.rb:37:in `visit'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:18:in `visit'
+org/jruby/RubyKernel.java:2080:in `send'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/visitors/perform.rb:7:in `visit'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/tree/root_node.rb:20:in `render'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/engine.rb:299:in `_render'
+/Applications/compass.app/Contents/Resources/ruby/compass_common/sass-3.1.15/lib/sass/engine.rb:246:in `render'
+src/compass_patch.rb:139:in `compile'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:126:in `timed'
+src/compass_patch.rb:138:in `compile'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/logger.rb:45:in `red'
+src/compass_patch.rb:137:in `compile'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:118:in `compile_if_required'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:103:in `run'
+org/jruby/RubyArray.java:1615:in `each'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:101:in `run'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:126:in `timed'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/compiler.rb:100:in `run'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/commands/watch_project.rb:147:in `recompile'
+org/jruby/RubyMethod.java:133:in `call'
+org/jruby/RubyProc.java:270:in `call'
+org/jruby/RubyProc.java:220:in `call'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/path.rb:73:in `run_callback'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/path.rb:55:in `callback_action'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/path.rb:35:in `update'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/state/directory.rb:39:in `modified'
+org/jruby/RubyArray.java:1615:in `each'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/state/directory.rb:37:in `modified'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/state/directory.rb:18:in `refresh'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/backends/rbfsevent.rb:30:in `temporary_multipath_handler'
+org/jruby/RubyArray.java:1615:in `each'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/backends/rbfsevent.rb:27:in `temporary_multipath_handler'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/backends/rbfsevent.rb:17:in `run'
+org/jruby/RubyArray.java:1615:in `each'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/backends/rbfsevent.rb:16:in `run'
+org/jruby/RubyProc.java:270:in `call'
+org/jruby/RubyProc.java:220:in `call'
+/Applications/compass.app/Contents/Resources/ruby/jruby/rb-fsevent-0.4.0/lib/rb-fsevent/fsevent.rb:38:in `run'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/backends/rbfsevent.rb:20:in `run'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm/monitor.rb:26:in `run'
+/Applications/compass.app/Contents/Resources/ruby/jruby/fssm-dbb37bba/lib/fssm.rb:20:in `monitor'
+src/compass_patch.rb:38:in `perform'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/commands/base.rb:18:in `execute'
+/Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/lib/compass/commands/project_base.rb:19:in `execute'
+src/ui/tray.rb:399:in `watch'
+org/jruby/RubyProc.java:270:in `call'
+org/jruby/RubyProc.java:224:in `call'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Syntax error: File to import not found or unreadable: partials/base.\A               Load paths:\A                 /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass\A                 /Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/frameworks/blueprint/stylesheets\A                 /Applications/compass.app/Contents/Resources/ruby/compass_0.12/compass-0.12.1/frameworks/compass/stylesheets\A                 /Applications/compass.app/Contents/Resources/ruby/compass_extensions/compass-960-plugin-f4bfe8555a7d2cae09bc/stylesheets\A                 /Applications/compass.app/Contents/Resources/ruby/compass_extensions/heygrady-compass-html5-boilerplate-4cc8815/stylesheets\A                 /Applications/compass.app/Contents/Resources/ruby/compass_extensions/compass-h5bp/stylesheets\A                 Compass::SpriteImporter\A         on line 2 of /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass/style.scss\A \A 1: /Users/albertmartin/Sites/TheBLOCK/sites/all/themes/theblock/sass/style.scss"; }

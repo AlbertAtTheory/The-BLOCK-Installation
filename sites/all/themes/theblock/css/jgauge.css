@@ -1,0 +1,89 @@
+/*!
+ * jGauge v0.3.0 Alpha 2
+ * Gauge styling
+ * 
+ * Developed by Darian Cabot
+ * http://www.dariancabot.com/
+ * 
+ * Date: 28 October 2010
+ */
+
+div.jgauge
+{
+	margin-top: 6px;
+	background-repeat: no-repeat;
+	background-position: top center;
+	float: left;
+	height: 120px;
+	overflow: hidden;
+	position: relative;
+	width: 120px;
+	z-index: 0;
+}
+
+div.jgauge:after
+{
+	content: " ";
+	background: url(../images/gauge-shine.svg) left top no-repeat;
+	background-size: 120px;
+	width: 120px;
+	height: 120px;
+	display: block;
+}
+
+div.jgauge p.tick-label
+{
+	color: #327a9e;
+	display: none;
+	font-family: Clarendon, Georgia, sans-serif;
+	font-size: 8px;
+	height: 10px;
+	line-height: 10px;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	text-align: center;
+	width: 50px;
+	z-index: 3;
+}
+
+div.jgauge img.needle
+{
+	border: 0;
+	display: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	z-index: 5;
+}
+
+div.jgauge .needle
+{
+	z-index: 5;
+}
+
+div.jgauge p.label
+{
+	color: #e3dfc5;
+	display: none;
+	font-family: Clarendon, Georgia, sans-serif;
+	font-size: 14px;
+	height: 16px;
+	line-height: 16px;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	text-align: center;
+	width: 100%;
+	z-index: 4;
+}
+
+div.jgauge canvas
+{
+	left: 0;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 0;
+	z-index: 1;
+}

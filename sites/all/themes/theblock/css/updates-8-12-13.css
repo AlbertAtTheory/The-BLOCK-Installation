@@ -1,0 +1,164 @@
+/* Fix QR Header Panel */
+#block-qr-panel h1 {
+  top: -24px;
+}
+/* Replace Ugly AJAX Loader w/Themed One */
+html.js input.form-autocomplete {
+  background-image: url(../images/ajax-loader.gif);
+  background-position: 100% 0px;
+  background-repeat: no-repeat;
+}
+html.js input.throbbing {
+  background-position: 100% -16px;
+}
+.ajax-progress {
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+}
+.ajax-progress .throbber {
+  background: transparent url(../images/ajax-loader.gif) no-repeat 0px 0px;
+  float: left;
+  height: 16px;
+  width: 16px;
+  margin: 2px;
+}
+/* Remove crappy .GIF throbber from "Favorite" link click */
+.flag-waiting .flag-throbber {
+  background: none;
+}
+/* Fix Bad-Login Message from Overlapping FB Connect */
+body.not-logged-in #modalContent div.messages {
+  margin-left: 1px;
+  margin-top: 35px;
+}
+/* Fix "Add Event Button" */
+#main-content header h1.title-with-buttons {
+  margin-right: 20px;
+}
+/* Fix "No Results" Button Position on User Page */
+.page-user .block-inner  {
+  position: relative;
+}
+.page-user .block-inner .jcarousel-prev,
+.page-user .block-inner .jcarousel-next {
+  top: -45px;
+}
+.page-user .block-inner .view-header a.jcarousel-viewall {
+  top: -1px;
+  right: 62px;
+  position: absolute;
+}
+.page-user .block-inner .view-empty a.jcarousel-viewall {
+  position: absolute;
+  right: 0;
+  top: -1px;
+}
+/* Fix for input Background white on Focus!!! */
+textarea:focus { 
+  background-color: transparent !important;
+  border: 1px solid #ccc;
+}
+/* Fix for BUEditor Margin Spacing & Color */
+.bue-popup-content {
+  margin: 1px 0 0 0;
+}
+.bue-popup-close {
+  position: relative;
+  top: 6px;
+  right: -12px;
+}
+.bue-popup-close:hover {
+  background-color: transparent;
+}
+/* Set 'min-height' for #main-content */
+#main-content {
+  min-height: 380px;
+}
+/* Fix for QRCodes Page Border/Margin Problem */
+.qr #content-wrapper .view-my-qr-codes .view-content .views-row.views-row-odd {
+  border-bottom: 20px solid #211c1a;
+}
+.qr #content-wrapper .view-my-qr-codes .view-content .views-row {
+  padding-bottom: 40px;
+  margin-bottom: -40px;
+}
+.qr #content-wrapper .view-my-qr-codes h1 {
+  margin-top: -5px;
+}
+/* Fix for Washed out Select:focus text */
+.form-select:focus {
+  color: rgb(236, 70, 34);
+}
+/* Min-Height for #columns */ 
+#columns {
+  min-height: 400px;
+}
+/* Fix for Status Page */
+.node-type-statuses #main-content header#profile_header {
+  position: relative;
+  top: -503px;
+}
+.node-type-statuses #main-content header#profile_header #page-title {
+  font-size: 24px;
+}
+.node-type-statuses #main-content article.node-statuses div.node-content {
+  top: 80px;
+  position: relative;
+  margin: 20px;
+}
+.node-type-statuses #main-content article.node-statuses div.user-picture {
+  padding-left: 20px;
+  position: relative;
+}
+/* Clean up margin on Frontpage "Headlines" header */
+.front #main-content {
+  margin-top: -13px;
+}
+/* Fix for My Vehicle page button placement */
+.node-type-vehicles #page-wrapper.vehicle .view-header a.block-button-ui {
+  position: relative;
+}
+/* Fix for Parts/Engines Page */
+@media (min-width: 481px) {
+  .node-type-parts article.node-parts section.field-name-field-partnumber, 
+  .node-type-engines article.node-engines section.field-name-field-partnumber,
+  .node-type-engines article.node-engines section.field-name-field-borestroke,
+  .node-type-engines article.node-engines section.field-name-field-displacement {
+      position: relative;
+      left: 10px;
+    }
+  .node-type-parts .block-button-ui.installbutton,
+  .node-type-engines .block-button-ui.installbutton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+}
+@-moz-document url-prefix() {
+  .node-type-parts article.node-parts section.field-name-field-partnumber {
+    position: relative;
+    top: 85px;
+    left: 10px;
+  }
+  .node-type-engines article.node-engines section.field-name-field-partnumber {
+    position: relative;
+    top: 85px;
+    left: 10px;
+  }
+  .node-type-engines article.node-engines section.field-name-field-displacement {
+    position: relative;
+    top: 90px;
+    left: 10px;
+  }
+  .node-type-engines article.node-engines section.field-name-field-borestroke {
+    position: relative;
+    top: 95px;
+    left: 10px;
+  }
+}
+/* Make social toolbar above everything so it can be clicked */
+.toolbar-social {
+  position: relative;
+  z-index: 99999;
+}

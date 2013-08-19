@@ -1,0 +1,92 @@
+#forum .forum-wrapper-25 .forum-table-name {
+	position: relative;
+}
+
+#forum .forum-table-forums {
+	margin-top: -30px;
+	margin-left: 10px;
+	width: 840px;
+	color: #302c29;
+}
+
+#forum .forum-table-forums tbody {
+	border-left: 20px solid #f4f3e9;
+	border-right: 20px solid #f4f3e9;
+	width: -20px;
+}
+
+#forum .forum-table-forums tbody td {
+	padding: 15px 0 15px 0;
+	border-bottom: 1px solid #dadad4;
+}
+
+#forum .forum-table-forums tr.even,
+#forum .forum-table-forums tr.odd {
+	background: #F4F3E9;
+}
+
+#forum .forum-table-forums .forum-name {
+	font-family: Arial, sans-serif;
+	font-weight: bold;
+	font-size: 14px;
+}
+
+#forum .forum-table-forums .forum-list-icon,
+#forum .forum-table-forums .forum-details,
+#forum .forum-table-forums .forum-last-reply {
+	vertical-align: top;
+}
+
+#forum .forum-table-forums .forum-last-reply {
+	padding-top: 21px;
+}
+
+#forum .forum-table-forums .utility {
+	float: right;
+	display: block;
+	width: 13px;
+	height: 13px;
+	text-indent: -9999px;
+	white-space: nowrap;
+	margin-right: 12px;
+	margin-top: -6px;
+}
+
+#forum .forum-table-forums .forum-subforums a {
+	font-family: Arial, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+}
+
+#forum .forum-table-forums .forum-description {
+	font-style: oblique;
+	font-size: 12px;
+	padding-top: 3px;
+}
+
+#forum .forum-table-forums .forum-list-icon {
+	padding-right: 15px;
+}
+#forum .forum-table-forums .forum-last-reply {
+	font-family: Arial, sans-serif;
+	font-style: oblique;
+}
+
+#forum .forum-table-forums .forum-last-reply a {
+	font-weight: bold;
+	font-style: normal;
+}
+
+#forum .forum-table-forums .forum-last-reply a.username {
+	font-weight: normal;
+	text-decoration: underline;
+	font-style: normal;
+}
+
+#forum .forum-table-forums .forum-subforums {
+	margin-top: 10px;
+}
+
+.forum-tools {
+	display: none;
+}
