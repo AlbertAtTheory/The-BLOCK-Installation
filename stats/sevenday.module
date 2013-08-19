@@ -1,0 +1,347 @@
+<?php
+function sevenday_permission() {
+	return array(
+		'access printout' => array(
+			'title' => t('Access Seven Day Report'),
+			'description' => t('Allow users to view seven day report PDF'),
+		),
+	);
+}
+
+function sevenday_menu() {
+	$items['admin/reports/sevenday.pdf'] = array(
+		'page callback' => 'sevenday_pdf',
+		'access arguments' => array('access printout'),
+		'type' => MENU_CALLBACK,
+	);
+
+	return $items;
+}
+
+function sevenday_pdf() {
+  if (!($path = libraries_get_path('fpdf'))) {
+    return;
+  } else {
+    global $user;
+    $site_name = variable_get('site_name');
+
+    define('FPDF_FONTPATH', drupal_get_path('module', 'sevenday') . '/fonts');
+
+    require($path . '/fpdf.php');
+		require('sevenday.fpdf.inc');
+		
+		$referrers = _sevenday_get_top_referrers();
+		
+		$pdf = new PDF('P', 'mm', 'Letter');
+		$pdf->AliasNbPages();
+		$pdf->AddPage();
+		$pdf->PrintSectionHeaders();
+		$pdf->PrintHealthMeters(_sevenday_user_overview(), _sevenday_visitor_overview(), _sevenday_social_overview());
+		$pdf->PrintUserActions(_sevenday_get_new_members(), 23, 16, _sevenday_generate_chart_url('user'));
+		$pdf->PrintVisitorOverview(_sevenday_get_total_visits(-8, -1, TRUE), _sevenday_get_total_visits(), _sevenday_get_time_on_site(), _sevenday_get_percent_of_mobile(), _sevenday_generate_chart_url('daily'), _sevenday_generate_chart_url('hourly'));
+		$pdf->PrintSocialOverview(_sevenday_get_page_impressions(), _sevenday_get_visits_by_social_network('Facebook'), _sevenday_get_visits_by_search(), _sevenday_get_visits_by_social_network('Twitter'));
+		$pdf->PrintTopReferrers(array(
+		    $referrers[0]['source'] . ' - ' . number_format($referrers[0]['pageviews']),
+		    $referrers[1]['source'] . ' - ' . number_format($referrers[1]['pageviews']),
+		    $referrers[2]['source'] . ' - ' . number_format($referrers[2]['pageviews']),
+		    $referrers[3]['source'] . ' - ' . number_format($referrers[3]['pageviews']),
+		    $referrers[4]['source'] . ' - ' . number_format($referrers[4]['pageviews']),
+		  ));
+		$pdf->PrintTopStory(_sevenday_get_top_article()[0]);
+		$pdf->PrintObservations();
+  	$pdf->Output();
+  	
+  	return;
+	}
+}
+
+function _sevenday_generate_chart_url($type) {
+  $charturl = 'https://chart.googleapis.com/chart?';
+  
+  switch ($type) {
+    case 'user':
+      $charturl .= 'chxl=0:|Mo|Tu|We|Th|Fr|Sa|Su&chxr=0,-10,100|1,0,10|2,0,20&chxs=0,676767,12,0,lt,676767&chxt=x,y,r&chbh=a,7&chs=400x180&cht=bvs&chco=3E6D9C,71A261,ECAF56&chds=0,10,0,10,0,20&chd=t2:2,2,6,1,2,2,1|1,1,0,3,2,0,0|5,9,13,12,10,11,8&chdl=Forum+Posts|Other+Posts|Registrations&chdlp=b&chm=D,ECAF56,2,0,6,1';
+      break;
+    case 'daily':
+      $charturl .= 'chxl=0:|Mo|Tu|We|Th|Fr|Sa|Su&chxr=0,-10,100&chxs=0,676767,12,0,lt,676767&chxt=x,y&chbh=a,7,9&chs=400x170&cht=bvg&chco=3E6D9C,71A261&chds=0,' . _sevenday_get_visits_by_day()['biggest'] . ',0,' . _sevenday_get_visits_by_day()['biggest'] . '&chxr=0,-10,100|1,0,' . _sevenday_get_visits_by_day()['biggest'] . '&chd=t:' . _sevenday_get_visits_by_day(TRUE)['chart'] . '|' . _sevenday_get_visits_by_day()['chart'] . '&chdl=Article+Reads|Total+Impressions&chdlp=b&chma=|0,10';
+      break;
+    case 'hourly':
+      $charturl .= 'chxl=0:|AM|1|2|3|4|5|6|7|8|9|10|11|PM|1|2|3|4|5|6|7|8|9|10|11&chxt=x,y&chbh=a,7,10&chs=400x120&cht=bvs&chco=3E6D9C&chds=0,' . _sevenday_get_visits_by_hour()['biggest'] . '&chd=t:' . _sevenday_get_visits_by_hour()['chart'] . '&chxr=0,-10,100|1,0,' . _sevenday_get_visits_by_hour()['biggest'] . '&chdl=Visits+by+Hour&chdlp=b&chm=R,F1F0F0,0,0.335,0.795';
+      break;
+  }
+  
+  $charturl .= '#.png';
+  return $charturl;
+}
+
+function _sevenday_get_new_members($start_date = -8, $end_date = -1) {
+  $query="SELECT name FROM users WHERE created >= '" . strtotime($start_date . ' days') . "' AND created <= '" . strtotime($end_date . ' day') . "'";
+  $result = mysql_query($query) or die(mysql_error());
+  return mysql_num_rows($result);
+}
+
+function _sevenday_get_total_visits($start_date = -8, $end_date = -1, $articles_only = FALSE) {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'start_date' => strtotime($start_date . ' days'),
+    'end_date' => strtotime($end_date . ' day'),
+    'max_results' => 1,
+  );
+  
+  if ($articles_only) {
+    $params['filters'] = 'ga:pagePath=@/news';
+  }
+  
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  return $feed->results->rows[0]['pageviews'];
+}
+
+function _sevenday_get_time_on_site() {
+  $params = array(
+    'metrics' => array('ga:avgTimeOnSite'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'max_results' => 1,
+  );
+  
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  return date('i:s',$feed->results->rows[0]['avgTimeOnSite']);
+}
+
+function _sevenday_get_percent_of_mobile() {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:isMobile'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'max_results' => 1,
+    'filters' => 'ga:isMobile==Yes',
+  );
+  
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  return round(($feed->results->rows[0]['pageviews'] /  _sevenday_get_total_visits()) * 100);
+}
+
+function _sevenday_get_top_referrers() {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:medium', 'ga:source'),
+    'sort_metric' => array('-ga:pageviews'),
+    'filters' => 'ga:medium!=(none)',
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'max_results' => 5,
+  );
+  $feed = google_analytics_api_report_data($params);
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  foreach ($feed->results->rows as $row => $value) {
+    if ($value['source'] == 'social') {
+      $feed->results->rows[$row]['source'] .= ' (' . $feed->results->rows[$row]['medium'] . ')';
+    }
+    else if ($value['source'] == 'google') {
+      $feed->results->rows[$row]['source'] .= ' (organic)';
+    }
+  }
+  
+  return $feed->results->rows;
+}
+
+function _sevenday_get_top_article() {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:pageTitle', 'ga:hostname', 'ga:pagePath'),
+    'sort_metric' => array('-ga:pageviews'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'sort' => '-ga:pageviews',
+    'max_results' => 1,
+    'filters' => 'ga:pagePath=@/news',
+  );
+  $feed = google_analytics_api_report_data($params);
+  if ($feed->error) {
+    return FALSE;
+  }
+  return $feed->results->rows;
+}
+
+function _sevenday_get_visits_by_day($articles_only = FALSE) {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:dayOfWeek'),
+    'sort_metric' => array('ga:dayOfWeek'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'sort' => 'ga:dayOfWeek',
+  );
+
+  if ($articles_only) {
+    $params['filters'] = 'ga:pagePath=@/news';
+  }
+
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  foreach ($feed->results->rows as $weekday) {
+    $chart_data .= $weekday['pageviews'] . ',';
+    
+    if ($biggest <= $weekday['pageviews']) {
+      $biggest = $weekday['pageviews'];
+    }
+  }
+  
+  return array(
+    'chart' => rtrim($chart_data,','),
+    'biggest' => $biggest,
+  );
+}
+
+function _sevenday_get_visits_by_hour() {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:hour'),
+    'sort_metric' => array('ga:hour'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+    'sort' => 'ga:hour',
+  );
+
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  foreach ($feed->results->rows as $weekday) {
+    $chart_data .= $weekday['pageviews'] . ',';
+    
+    if ($biggest <= $weekday['pageviews']) {
+      $biggest = $weekday['pageviews'];
+    }
+  }
+  
+  return array(
+    'chart' => rtrim($chart_data,','),
+    'biggest' => $biggest,
+  );
+}
+
+function _sevenday_get_visits_by_social_network($filter, $start_date = -8, $end_date = -1) {
+  $params = array(
+    'metrics' => array('ga:pageviews'),
+    'dimensions' => array('ga:socialNetwork', 'ga:medium'),
+    'start_date' => strtotime($start_date . ' days'),
+    'end_date' => strtotime($end_date . ' day'),
+  );
+  
+  if ($filter) {
+    $params['filters'] = 'ga:socialNetwork==' . $filter . ',ga:medium==' . strtolower($filter);
+  }
+
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  $pageviewcount = 0;
+  
+  foreach ($feed->results->rows as $network) {
+    $pageviewcount += $network['pageviews'];
+  }
+  
+  if ($filter) {
+    return $pageviewcount;
+  } else {
+    return $feed->results->rows;
+  }
+}
+
+function _sevenday_get_visits_by_search() {
+  $params = array(
+    'metrics' => array('ga:organicSearches'),
+    'start_date' => strtotime('-8 days'),
+    'end_date' => strtotime('-1 day'),
+  );
+
+  $feed = google_analytics_api_report_data($params);
+  
+  if ($feed->error) {
+    return FALSE;
+  }
+  
+  return $feed->results->rows[0]['organicSearches'];
+}
+
+function _sevenday_get_page_impressions() {
+  $app_id = "567795176566601";
+  $app_secret = "09c10fad18346926543004018eb3be7f";
+  $my_url = "https://theblock.com/admin/reports/sevenday.pdf";
+  
+  session_start();
+  
+  $code = $_REQUEST["code"];
+  
+  if(empty($code)) {
+    $_SESSION['state'] = md5(uniqid(rand(), TRUE)); // CSRF protection
+    $dialog_url = "https://www.facebook.com/dialog/oauth?client_id=" 
+      . $app_id . "&redirect_uri=" . urlencode($my_url) . "&state="
+      . $_SESSION['state'] . "&scope=read_insights";
+    
+    echo("<script> top.location.href='" . $dialog_url . "'</script>");
+  }
+  
+  if($_SESSION['state'] && ($_SESSION['state'] === $_REQUEST['state'])) {
+    $token_url = "https://graph.facebook.com/oauth/access_token?"
+      . "client_id=" . $app_id . "&redirect_uri=" . urlencode($my_url)
+      . "&client_secret=" . $app_secret . "&code=" . $code;
+    
+    $response = file_get_contents($token_url);
+    $params = null;
+    parse_str($response, $params);
+    
+    $_SESSION['access_token'] = $params['access_token'];
+    
+    $graph_url = "https://graph.facebook.com/130638851883/insights/page_posts_impressions/week?access_token=" 
+      . $params['access_token'];
+    
+    $reqdata = json_decode(file_get_contents($graph_url));
+    
+    return $reqdata->data[0]->values[0]->value;
+   }
+   else {
+      return "ERR";
+   }
+}
+
+function _sevenday_user_overview() {
+  return (68/77)*50;
+}
+
+function _sevenday_visitor_overview() {
+  return (_sevenday_get_total_visits()/_sevenday_get_total_visits(-15, -8))*100;
+}
+
+function _sevenday_social_overview() {
+  return (_sevenday_get_visits_by_social_network('Facebook')/_sevenday_get_visits_by_social_network('Facebook', -15, -8))*100;
+}

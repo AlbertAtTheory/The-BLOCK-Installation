@@ -1,0 +1,81 @@
+body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-weight: inherit;
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	vertical-align: baseline;
+	background-color: white;
+	overflow-y: scroll;
+	min-width: 1000px;
+	font-family: 'Droid Sans', sans-serif;
+}
+
+header {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+	min-width: 952px;
+	width: auto !important;
+	width: 952px;
+	position: relative;
+	background: #F1F1F1;
+	border-bottom: 1px solid #E5E5E5;
+	height: 77px;
+	overflow: hidden;
+	padding: 24px 44px;
+	color: #6b6c6c;
+	font-size: 18px;
+}
+
+article {
+	width: 1200px;
+	margin: 0 auto;
+}
+
+h2 {
+	font-size: 250%;
+	border-bottom: 1px solid #CCC;
+	margin-top: 2.5em;
+	font-size: 16px;
+	line-height: 24px;
+	color: #222;
+	font-weight: normal;
+	position: relative;
+	z-index: 1;
+}
+
+#ui-datepicker-div { font-size: 12px; font-family: 'Droid Sans Mono', sans-serif; }
+
+p { font-size: 14px; line-height: 1.67; }
+b { font-size: 16px; }
+
+blockquote {
+	margin: 0;
+	margin-top: 90px;
+	font-family: 'Droid Sans Mono', sans-serif;
+	background: #F1F1F1;
+	padding: 0 44px;
+	font-size: 10px;
+	float: right;
+	display: block;
+	height: 315px;
+	width: 200px;
+	overflow: scroll;
+	overflow-x: hidden;
+	white-space: nowrap;
+}
+
+footer, subheader {
+	font-size: 12px;
+	background: #333;
+	overflow: hidden;
+	clear: both;
+	padding: 0 44px;
+	line-height: 44px;
+	color: rgba(255, 255, 255, 0.8);
+	font-style: bold;
+}
