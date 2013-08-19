@@ -472,9 +472,14 @@ $conf['reverse_proxy_addresses'] = array('172.16.125.5', '198.208.145.43', '148.
  *
  * Remove the leading hash signs to enable.
  */
-# $conf['blocked_ips'] = array(
-#   'a.b.c.d',
-# );
+$conf['blocked_ips'] = array(
+  '192.119.144.198',
+  '46.105.189.234',
+  '142.0.34.185',
+  '37.59.80.43',
+  '151.237.177.130',
+  '178.33.213.62',
+);
 
 /**
  * Fast 404 pages:
