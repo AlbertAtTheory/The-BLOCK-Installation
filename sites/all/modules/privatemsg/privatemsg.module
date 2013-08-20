@@ -41,7 +41,7 @@ function privatemsg_permission() {
     ),
     'delete privatemsg' => array(
       'title' => t('Delete private messages'),
-      'description' => t('Delete private messages'),
+      'description' => t('Allows users to delete messages they can read'),
     ),
     'allow disabling privatemsg' => array(
       'title' => t('Allow disabling private messages'),
@@ -89,9 +89,11 @@ function _privatemsg_generate_user_array($string, $slice = NULL) {
   $participants = array();
   foreach ($users as $uid) {
     // If it is an integer, it is a user id.
+    if ((int)$uid > 0) {
     $user_ids = privatemsg_user_load_multiple(array($uid));
-    if ((int)$uid > 0 && ($account = array_shift($user_ids))) {
-      $participants[privatemsg_recipient_key($account)] = $account;
+      if ($account = array_shift($user_ids)) {
+        $participants[privatemsg_recipient_key($account)] = $account;
+      }
     }
     elseif (strpos($uid, '_') !== FALSE) {
       list($type, $id) = explode('_', $uid);
@@ -994,7 +996,7 @@ function _privatemsg_parse_userstring($input, $types_limitations = array()) {
  */
 function privatemsg_privatemsg_name_lookup($string) {
   // Remove optional user specifier.
-  $string = trim(str_replace(t('[user]'), '', $string));
+  $string = trim(str_replace('[user]', '', $string));
   // Fall back to the default username lookup.
   if (!$error = module_invoke('user', 'validate_name', $string)) {
     // String is a valid username, look it up.
@@ -1042,6 +1044,9 @@ function privatemsg_sql_list($account, $argument = 'list') {
   $query->addExpression('MAX(pm.timestamp)', 'last_updated');
   $query->addExpression('MAX(pm.has_tokens)', 'has_tokens');
   $query->addExpression('SUM(pmi.is_new)', 'is_new');
+
+  // Needed to for tracking replies.
+  $query->addExpression('MAX(pm.reply_to_mid)', 'last_reply_to_mid');
 
   // Load enabled columns
   $fields = privatemsg_get_enabled_headers();
@@ -1354,7 +1359,7 @@ function privatemsg_form_alter(&$form, &$form_state, $form_id) {
 
     // We have to use user_access() because privatemsg_user_access() would
     // return FALSE when privatemsg is disabled.
-    if ((user_access('write privatemsg') || user_access('read privatemsg')) && user_access('allow disabling privatemsg')) {
+    if ((user_access('write privatemsg') || user_access('read privatemsg')) && user_access('allow disabling privatemsg') && privatemsg_allow_disable($form['#user'])) {
       $form['privatemsg']['pm_enable'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable private messages'),
@@ -1368,6 +1373,12 @@ function privatemsg_form_alter(&$form, &$form_state, $form_id) {
 
 /**
  * Hides the settings fieldset if there are no options to be displayed.
+ *
+ * @param array $element
+ *   Form element to check.
+ * @return array
+ *   Form element with '#access' key value TRUE if the fieldset has a child,
+ *   FALSE if the fieldset has no child.
  */
 function privatemsg_account_fieldset_remove_if_empty($element) {
   // If there are no children elements, deny access.
@@ -1388,19 +1399,49 @@ function privatemsg_account_fieldset_remove_if_empty($element) {
 }
 
 /**
- * Implements hook_user_insert().
+ * Implements hook_user_update().
  */
 function privatemsg_user_update(&$edit, $account, $category) {
-  if (isset($edit['pm_enable']) && (user_access('write privatemsg') || user_access('read privatemsg')) && user_access('allow disabling privatemsg')) {
+  if (isset($edit['pm_enable']) && (user_access('write privatemsg') || user_access('read privatemsg')) && user_access('allow disabling privatemsg') && privatemsg_allow_disable($account)) {
     $current = privatemsg_is_disabled($account);
-    $disabled = (!$edit['pm_enable']);
+    $disabled = (int) !$edit['pm_enable'];
     $edit['pm_enable'] = NULL;
 
-    // only perform the save if the value has changed
+    // Only perform the save if the value has changed.
     if ($current != $disabled) {
-      privatemsg_set_setting('user', $account->uid, 'disabled', $disabled);
+      // If disabled is 1.
+      if ($disabled == 1) {
+        // Insert the setting.
+        privatemsg_set_setting('user', $account->uid, 'disabled', $disabled);
+      }
+      else {
+        // Delete the setting.
+        privatemsg_del_setting('user', $account->uid, 'disabled');
+      }
     }
   }
+}
+
+/**
+ * Checks if the user is allowed to disable/enable private message.
+ *
+ * @param object
+ *   User object to check.
+ * @return bool
+ *   TRUE if the user is allowed to disable the private message.
+ */
+function privatemsg_allow_disable($account) {
+  global $user;
+
+  $allow_disable_privatemsg = TRUE;
+  // Compare it to current user id.
+  if ($user->uid != $account->uid) {
+    // User must have administer permission to disable other users' private message
+    // and the edited user must be able to change the setting.
+    $allow_disable_privatemsg = (user_access('administer privatemsg settings') && user_access('allow disabling privatemsg', $account));
+  }
+
+  return $allow_disable_privatemsg;
 }
 
 /**
@@ -1419,6 +1460,13 @@ function privatemsg_privatemsg_block_message($author, $recipients, $context = ar
       $blocked[] = array(
         'recipient' => 'user_' . $recipient->uid,
         'message' => t('%recipient has disabled private message receiving.', array('%recipient' => privatemsg_recipient_format($recipient, array('plain' => TRUE)))),
+      );
+    }
+    // Do not send private messages to blocked users.
+    else if (isset($recipient->status) && (!$recipient->status)) {
+      $blocked[] = array(
+        'recipient' => 'user_' . $recipient->uid,
+        'message' => t('%recipient has disabled his or her account.', array('%recipient' => privatemsg_recipient_format($recipient, array('plain' => TRUE)))),
       );
     }
   }
@@ -1466,9 +1514,9 @@ function privatemsg_block_configure($delta = '') {
   if ($delta == 'privatemsg-new') {
     $form['notification'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Display block when there are no new messages'),
+      '#title' => t('Display block when there are no unread messages'),
       '#default_value' => variable_get('privatemsg_no_messages_notification', 0),
-      '#description' => t('Enable this to have this block always displayed, even if there are no new messages'),
+      '#description' => t('Enable this to have this block always displayed, even if there are no unread messages'),
     );
     return $form;
   }
@@ -1503,7 +1551,7 @@ function _privatemsg_block_new() {
   $count = privatemsg_unread_count();
   if ($count || variable_get('privatemsg_no_messages_notification', 0)) {
     $block = array(
-      'subject' => $count ? format_plural($count, 'New message', 'New messages') : t('No new messages'),
+      'subject' => $count ? format_plural($count, 'Unread message', 'Unread messages') : t('No unread messages'),
       'content' => theme('privatemsg_new_block', array('count' => $count)),
     );
     return $block;
@@ -1702,6 +1750,10 @@ function privatemsg_reply($thread_id, $body, $options = array()) {
     );
   }
 
+  // Add the reply_to_mid, so we can mark that message as replied
+  $thread = privatemsg_thread_load($thread_id);
+  $message->reply_to_mid = end($thread['messages'])->mid;
+
   $message->thread_id = $thread_id;
   // Load participants
   $message->recipients = _privatemsg_load_thread_participants($thread_id, $message->author);
@@ -1713,6 +1765,7 @@ function privatemsg_reply($thread_id, $body, $options = array()) {
       _privatemsg_handle_recipients($validated['message']->mid, $validated['message']->recipients, FALSE);
     }
   }
+
   return $validated;
 }
 
@@ -1740,10 +1793,10 @@ function _privatemsg_validate_message(&$message, $form = FALSE) {
   $message->subject = trim($message->subject);
   if (empty($message->subject)) {
     if ($form) {
-      form_set_error('subject', t('You must include a subject line with your message.'));
+      form_set_error('subject', t('You must include a subject line or a message.'));
     }
     else {
-      $messages['error'][] = t('A subject must be included with the message.');
+      $messages['error'][] = t('A subject or message must be included.');
     }
   }
 
@@ -1853,6 +1906,10 @@ function _privatemsg_send($message) {
     $args['format'] = $message->format;
     $args['timestamp'] = $message->timestamp;
     $args['has_tokens'] = (int)$message->has_tokens;
+    if (isset($message->reply_to_mid)) {
+      $args['reply_to_mid'] = $message->reply_to_mid;
+    }
+
     $mid = db_insert('pm_message')
       ->fields($args)
       ->execute();
@@ -2125,6 +2182,12 @@ function _privatemsg_list_thread($tableselect) {
       // Set the css class in the tr tag.
       $row['#attributes']['class'][] = 'privatemsg-unread';
     }
+
+    if (!empty($thread['is_replied'])) {
+      // Set the css class in the tr tag.
+      $row['#attributes']['class'][] = 'privatemsg-replied';
+    }
+
 
     foreach ($enabled_headers as $key) {
       // Theme each enabled field.
@@ -3031,25 +3094,25 @@ function privatemsg_entity_property_info() {
       'type'  => 'integer',
       'label' => t('Private message thread ID'),
       'description' => t('Private message thread ID'),
-      'getter callback' => 'entity_metadata_verbatim_get',
+      'getter callback' => 'entity_property_verbatim_get',
     ),
     'author' => array(
       'type'  => 'user',
       'label' => t('Private message author'),
       'description' => t('Private message author'),
-      'setter callback' => 'entity_metadata_verbatim_set',
+      'setter callback' => 'entity_property_verbatim_set',
     ),
     'subject' => array(
       'type'  => 'text',
       'label' => t('Private message subject'),
       'description' => t('Private message subject'),
-      'setter callback' => 'entity_metadata_verbatim_set',
+      'setter callback' => 'entity_property_verbatim_set',
     ),
     'body' => array(
       'type'  => 'text',
       'label' => t('Private message body'),
       'description' => t('Private message body'),
-      'setter callback' => 'entity_metadata_verbatim_set',
+      'setter callback' => 'entity_property_verbatim_set',
     ),
     'timestamp' => array(
       'type' => 'date',

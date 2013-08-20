@@ -155,8 +155,6 @@ function privatemsg_list_page($argument = 'list', $uid = NULL) {
 }
 
 function privatemsg_list($form, &$form_state, $argument, $account) {
-  drupal_add_css(drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-list.css');
-
   // If this is an AJAX request, update $_GET['q'] so that table sorting and
   // similar links are using the correct base path.
   if ($_GET['q'] == 'system/ajax') {
@@ -177,6 +175,11 @@ function privatemsg_list($form, &$form_state, $argument, $account) {
       '#prefix' => '<div id="privatemsg-list-form">',
       '#suffix' => '</div>',
     ),
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-list.css',
+      ),
+    ),
   );
   $form['updated']['list'] = array(
     '#type' => 'tableselect',
@@ -191,6 +194,7 @@ function privatemsg_list($form, &$form_state, $argument, $account) {
   $query = _privatemsg_assemble_query('list', $account, $argument);
   $i = 0;
   foreach ($query->execute() as $row) {
+
     // Store the raw row data.
     $form['updated']['list']['#options'][$row->thread_id] = (array)$row;
     // Tableselect sorts the options, set a weight so that the order doesn't get
@@ -199,6 +203,16 @@ function privatemsg_list($form, &$form_state, $argument, $account) {
   }
 
   if (!empty($form['updated']['list']['#options'])) {
+    // Load the last reply that is not from the current user.
+    $result = db_query('SELECT pmi.thread_id, MAX(pm.mid) AS last_message FROM {pm_message} pm INNER JOIN {pm_index} pmi ON pm.mid = pmi.mid WHERE pmi.thread_id IN (:thread_ids) AND pm.author <> :current_uid GROUP BY pmi.thread_id', array(':current_uid' => $account->uid, ':thread_ids' => array_keys($form['updated']['list']['#options'])));
+    foreach ($result as $row) {
+      // Set replied flag if there is no newer message from another user than
+      // the last replied.
+      if ($row->last_message <= $form['updated']['list']['#options'][$row->thread_id]['last_reply_to_mid']) {
+        $form['updated']['list']['#options'][$row->thread_id]['is_replied'] = TRUE;
+      }
+    }
+
     $form['updated']['actions'] = _privatemsg_action_form($argument);
   }
 
@@ -399,6 +413,13 @@ function privatemsg_form_reply($form, &$form_state, $thread) {
     '#weight' => 20,
   );
 
+  // Include the mid of the message we're responding to so we can mark it as
+  // replied when the form is submitted.
+  $reply_to_mid = end($thread['messages'])->mid;
+  $form['reply_to_mid'] = array(
+    '#type' => 'value',
+    '#value' => $reply_to_mid,
+  );
   $form['thread_id'] = array(
     '#type' => 'value',
     '#value' => $thread['thread_id'],
@@ -656,6 +677,10 @@ function privatemsg_new_preview($form, &$form_state) {
   _field_invoke_multiple('load', 'privatemsg_message', array($message->mid => $message));
   $form_state['privatemsg_preview'] = array(
     '#markup' => theme('privatemsg_view', array('message' => $message)),
+    '#attached' => array(
+      drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-view.base.css',
+      drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-view.theme.css',
+    ),
   );
   // This forces the form to be rebuilt instead of being submitted.
   $form_state['rebuild'] = TRUE;
@@ -826,7 +851,9 @@ function privatemsg_view($thread) {
     if (isset($thread['older_start'])) {
       $options = array(
         'query' => array('start' => $thread['older_start']),
-        'title' => t('Display older messages'),
+        'attributes' => array(
+          'title' => t('Display older messages'),
+        ),
       );
       $older = l(t('<<'), 'messages/view/' . $thread['thread_id'], $options);
     }
@@ -834,7 +861,9 @@ function privatemsg_view($thread) {
     if (isset($thread['newer_start'])) {
       $options = array(
         'query' => array('start' => $thread['newer_start']),
-        'title' => t('Display newer messages'),
+        'attributes' => array(
+          'title' => t('Display newer messages'),
+        ),
       );
       $newer = l(t('>>'), 'messages/view/' . $thread['thread_id'], $options);
     }
@@ -851,7 +880,12 @@ function privatemsg_view($thread) {
   // Render the participants.
   $content['participants'] = array(
     '#markup' => theme('privatemsg_recipients', array('thread' => $thread)),
-    '#weight' => -5
+    '#weight' => -5,
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-recipients.css',
+      ),
+    ),
   );
 
   // Render the messages.
@@ -877,6 +911,12 @@ function privatemsg_view($thread) {
     $i++;
     $content['messages'][$pmid] = array(
       '#markup' => theme('privatemsg_view', array('message' => $message)),
+      '#attached' => array(
+        'css' => array(
+          drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-view.base.css',
+          drupal_get_path('module', 'privatemsg') . '/styles/privatemsg-view.theme.css',
+        ),
+      ),
     );
   }
 

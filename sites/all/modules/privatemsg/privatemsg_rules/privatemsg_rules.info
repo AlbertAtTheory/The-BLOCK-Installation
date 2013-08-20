@@ -6,9 +6,9 @@ dependencies[] = privatemsg
 dependencies[] = privatemsg_filter
 dependencies[] = rules
 files[]=privatemsg_rules.rules.inc
-; Information added by drupal.org packaging script on 2013-02-08
+; Information added by drupal.org packaging script on 2013-08-13
 version = "7.x-2.x-dev"
 core = "7.x"
 project = "privatemsg"
-datestamp = "1360287447"
+datestamp = "1376360338"
 
