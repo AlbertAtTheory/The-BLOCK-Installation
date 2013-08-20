@@ -1,0 +1,20 @@
+<?php
+
+function botkiller_form_alter(&$form, &$form_state, $form_id) {
+  // Add an extra validation function.
+  if($form_id == "user_register_form") {
+    $form['#validate'][] = '_botkiller_register_validate';
+  }
+}
+
+function _botkiller_register_validate(&$form, &$form_state) {
+  // Extract the submitted name.
+  $firstname = $form_state['values']['field_first_name']['und'][0]['value'];
+  $lastname = $form_state['values']['field_last_name']['und'][0]['value'];
+
+  // If it's the same first and last name, it's obviously not human!
+  if (!empty($firstname) && !empty($lastname) && $firstname == $lastname) {
+    form_set_error('field_first_name', t('That\'s weird.  Most people don\'t have the same first and last name.  Are you sure this is your name?'));
+    form_set_error('field_last_name');
+  }
+}

@@ -1,0 +1,7 @@
+name = Bot Killer
+description = A tiny bit of logic goes a long way.
+
+version = 7.x-1.0
+core = 7.x
+
+package = Theory
