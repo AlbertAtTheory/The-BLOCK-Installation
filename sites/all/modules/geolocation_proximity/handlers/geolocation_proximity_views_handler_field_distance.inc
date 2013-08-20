@@ -133,7 +133,7 @@ class geolocation_proximity_views_handler_field_distance extends views_handler_f
   /**
    * Validate the options form.
    */
-  function extra_options_validate(&$form, &$form_state) {
+  function extra_options_validate($form, &$form_state) {
     $this->latlng_validate($form['location'], $form_state['values']['options']['location']);
   }
 
