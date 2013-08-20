@@ -625,4 +625,4 @@ fast_404_ext_check();
 # regular pages, so only use if you are spending too much CPU/Memory/DB on
 # 404s and the trade-off is worth it.
 # This setting will deliver 404s with less than 2MB of RAM.
-fast_404_path_check();
+#fast_404_path_check();
