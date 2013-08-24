@@ -10,3 +10,6 @@
 [submodule "sites/all/themes/shiny"]
 	path = sites/all/themes/shiny
 	url = http://git.drupal.org/project/shiny.git
+[submodule "sites/all/themes/adaptivetheme"]
+	path = sites/all/themes/adaptivetheme
+	url = http://git.drupal.org/project/adaptivetheme.git
