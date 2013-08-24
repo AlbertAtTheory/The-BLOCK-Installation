@@ -7,3 +7,6 @@
 [submodule "sites/all/libraries/colorbox"]
 	path = sites/all/libraries/colorbox
 	url = https://github.com/jackmoore/colorbox.git
+[submodule "sites/all/themes/shiny"]
+	path = sites/all/themes/shiny
+	url = http://git.drupal.org/project/shiny.git
