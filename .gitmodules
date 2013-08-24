@@ -13,3 +13,6 @@
 [submodule "sites/all/themes/adaptivetheme"]
 	path = sites/all/themes/adaptivetheme
 	url = http://git.drupal.org/project/adaptivetheme.git
+[submodule "sites/all/libraries/ckeditor"]
+	path = sites/all/libraries/ckeditor
+	url = https://github.com/ckeditor/ckeditor-releases.git
