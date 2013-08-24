@@ -16,3 +16,6 @@
 [submodule "sites/all/libraries/ckeditor"]
 	path = sites/all/libraries/ckeditor
 	url = https://github.com/ckeditor/ckeditor-releases.git
+[submodule "sites/all/libraries/json2"]
+	path = sites/all/libraries/json2
+	url = https://github.com/douglascrockford/JSON-js.git
