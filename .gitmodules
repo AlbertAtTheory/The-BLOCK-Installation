@@ -1,3 +1,6 @@
 [submodule "sites/all/themes/theblock"]
 	path = sites/all/themes/theblock
 	url = https://github.com/AlbertAtTheory/The-BLOCK-Theme.git
+[submodule "sites/all/libraries/facebook-php-sdk"]
+	path = sites/all/libraries/facebook-php-sdk
+	url = https://github.com/facebook/facebook-php-sdk.git
