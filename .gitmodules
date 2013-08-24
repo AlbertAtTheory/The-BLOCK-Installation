@@ -4,3 +4,6 @@
 [submodule "sites/all/libraries/facebook-php-sdk"]
 	path = sites/all/libraries/facebook-php-sdk
 	url = https://github.com/facebook/facebook-php-sdk.git
+[submodule "sites/all/libraries/colorbox"]
+	path = sites/all/libraries/colorbox
+	url = https://github.com/jackmoore/colorbox.git
