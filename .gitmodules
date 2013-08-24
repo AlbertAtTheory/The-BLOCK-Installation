@@ -1,0 +1,3 @@
+[submodule "sites/all/themes/theblock"]
+	path = sites/all/themes/theblock
+	url = https://github.com/AlbertAtTheory/The-BLOCK-Theme.git
