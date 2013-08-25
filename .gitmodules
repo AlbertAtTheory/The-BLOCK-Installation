@@ -19,3 +19,6 @@
 [submodule "sites/all/libraries/json2"]
 	path = sites/all/libraries/json2
 	url = https://github.com/douglascrockford/JSON-js.git
+[submodule "sites/all/libraries/phpqrcode"]
+	path = sites/all/libraries/phpqrcode
+	url = git://git.code.sf.net/p/phpqrcode/git
