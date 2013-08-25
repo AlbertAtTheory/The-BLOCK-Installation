@@ -604,7 +604,7 @@ $conf['fast_404_string_whitelisting'] = array('cdn/farfuture', '/advagg_');
 # However, some cases (usually when checking paths for Drupal pages) you may want to show a regular 404 error. In this case you can
 # specify a URL to another page and it will be read and displayed (it can't be redirected to because we have to give a 30x header to
 # do that. This page needs to be in your docroot.
-#$conf['fast_404_HTML_error_page'] = './my_page.html';
+$conf['fast_404_HTML_error_page'] = 'sites/all/themes/theblock/templates/404.html';
 
 # By default the custom 404 page is only loaded for path checking. Load it for all 404s with the below option set to TRUE
 $conf['fast_404_HTML_error_all_paths'] = TRUE;
