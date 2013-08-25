@@ -25,3 +25,6 @@
 [submodule "sites/all/modules/botcha"]
 	path = sites/all/modules/botcha
 	url = http://git.drupal.org/project/botcha.git
+[submodule "sites/all/modules/advanced_forum"]
+	path = sites/all/modules/advanced_forum
+	url = http://git.drupal.org/project/advanced_forum.git
