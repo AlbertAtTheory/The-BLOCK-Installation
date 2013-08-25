@@ -22,3 +22,6 @@
 [submodule "sites/all/libraries/phpqrcode"]
 	path = sites/all/libraries/phpqrcode
 	url = git://git.code.sf.net/p/phpqrcode/git
+[submodule "sites/all/modules/botcha"]
+	path = sites/all/modules/botcha
+	url = http://git.drupal.org/project/botcha.git
