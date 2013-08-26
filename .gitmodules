@@ -31,3 +31,6 @@
 [submodule "sites/all/modules/ds"]
 	path = sites/all/modules/ds
 	url = http://git.drupal.org/project/ds.git
+[submodule "sites/all/modules/suggestedterms"]
+	path = sites/all/modules/suggestedterms
+	url = http://git.drupal.org/project/suggestedterms.git
