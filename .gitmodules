@@ -34,3 +34,6 @@
 [submodule "sites/all/modules/suggestedterms"]
 	path = sites/all/modules/suggestedterms
 	url = http://git.drupal.org/project/suggestedterms.git
+[submodule "sites/all/modules/views"]
+	path = sites/all/modules/views
+	url = http://git.drupal.org/project/views.git
